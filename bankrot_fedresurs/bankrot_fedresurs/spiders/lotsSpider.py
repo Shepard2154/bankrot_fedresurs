@@ -27,35 +27,34 @@ class LotsSpider(scrapy.Spider):
     today_date = datetime.today().strftime("%Y-%m-%d")
 
     filter_search_list = {
-        'apartment': [
-            'Жилое', 
-            'Апартаменты'
-            ],
-        'empty': [
-            'Магазин',
-            'Гостиница',
-            'Сто',
-            'Станция тех. Обслуживания',
-            'Автосалон',
-            'Здание',
-            'Здания',
-            'Отель',
-            'Мойка',
-            'Ангар',
-            'Склад',
-            'Столовая',
-            'Павильон',
-            'Азс',
-            'Автозаправочная станция'
-            ],
-        'house': [
-            'Садовый дом'
-            ],
-        'stead': [
-            'Земля'
-            ]
+    'apartment': [
+        'Жилое', 'жилое' 
+        'Апартаменты', 'апартаменты'
+        ],
+    'empty': [
+        'Магазин', 'магазин',
+        'Гостиница', 'гостиница',
+        'Сто', 'сто',
+        'Станция тех. Обслуживания', 'cтанция тех. Обслуживания',
+        'Автосалон', 'автосалон',
+        'Здание', 'здание',
+        'Здания', 'здания',
+        'Отель', 'отель',
+        'Мойка', 'мойка',
+        'Ангар', 'ангар',
+        'Склад', 'склад',
+        'Столовая', 'столовая',
+        'Павильон', 'павильон',
+        'Азс', 'азс',
+        'Автозаправочная станция', 'автозаправочная станция'
+        ],
+    'house': [
+        'Садовый дом', 'садовый дом'
+        ],
+    'stead': [
+        'Земля', 'земля'
+        ]
     }
-
 
     def __init__(self, property_category=None, search_text=None, file_name=None, *args, **kwargs):
         super(LotsSpider).__init__(*args, **kwargs)
@@ -63,7 +62,7 @@ class LotsSpider(scrapy.Spider):
         self.property_category = property_category
         self.search_text = search_text
         with open(file_name, 'r') as f:
-            self.urls = f.read().strip().split('\n')\
+            self.urls = f.read().strip().split('\n')
     
 
     def start_requests(self):
@@ -94,19 +93,22 @@ class LotsSpider(scrapy.Spider):
             for row in table_lot_info:
                 if self.search_text in row:
                     search_text_flag = True
-
+        
         if self.property_category:
-            table_lot_info = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
-            for i in range(len(table_lot_info)):
-                print(i, table_lot_info[i])
-            print(len(table_lot_info))
+            table_lot_info1 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
+            table_lot_info2 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
             keywords_filter = self.filter_search_list.get(self.property_category)
             for keyword in keywords_filter:
-                for row in table_lot_info:
+                for row in table_lot_info1:
                     if keyword in row:
                         property_category_flag = True
                         break
-        
+                for row in table_lot_info2:
+                    if keyword in row:
+                        property_category_flag = True
+                        break
+
+       
         if (self.search_text and search_text_flag and self.property_category and property_category_flag) or (self.search_text==self.property_category==None) or (self.search_text and search_text_flag and self.property_category==None) or (self.property_category and property_category_flag and self.search_text==None):
             loader.add_value("url", current_url)
             loader.add_value("message_number", message_number)

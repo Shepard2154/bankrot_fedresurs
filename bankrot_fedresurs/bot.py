@@ -9,13 +9,14 @@ from telebot.types import InputMediaPhoto
 
 
 # settings for logging
-# logger.add("debug.log", format="{time}  {message}", level="DEBUG", rotation="500 MB", compression="zip", encoding='utf-8')
+logger.add("debug.log", format="{time}  {message}", level="DEBUG", rotation="500 MB", compression="zip", encoding='utf-8')
 
 # include .env file
 load_dotenv()
 
 bot = telebot.TeleBot(os.getenv("BOT_BANKROT_FEDRESURS"))
-ADMIN_ID = os.getenv("MY_TG_ID")
+ADMIN_ID = os.getenv("ADMIN_TG_ID")
+DEVELOPER_ID = os.getenv("MY_TG_ID")
 
 keyboard_menu = types.InlineKeyboardMarkup(row_width=1)
 property_category_button = types.InlineKeyboardButton(text='Классификация имущества', callback_data='property_category_query')
@@ -42,12 +43,19 @@ def scrapy_spider_crawl(scrapy_spider_arguments):
     if scrapy_spider_arguments.property_category:
         bash_command_to_parse += f" -a property_category=\"{scrapy_spider_arguments.property_category}\""
 
-    print(bash_command_to_parse)
-    
-    bash_command = subprocess.Popen(bash_command_to_parse, shell=True)
-    print(bash_command)
-    excel_table = open('bankrot_fedresurs/bankrot_fedresurs_{today}.xlsx', 'rb')
-    bot.send_document(ADMIN_ID, excel_table)
+    logger.debug(f"START_SPIDER: {bash_command_to_parse}")
+    try:
+        bash_command = subprocess.check_output(bash_command_to_parse, shell=True)
+
+        excel_table = open(f'bankrot_fedresurs_{today}.xlsx', 'rb')
+        excel_table2 = open(f'bankrot_fedresurs_{today}.xlsx', 'rb') 
+        bot.send_document(ADMIN_ID, excel_table)
+        bot.send_document(DEVELOPER_ID, excel_table2)
+        excel_table.close()
+        excel_table2.close()
+        bot.send_message(ADMIN_ID, text="Хотите установить другие параметры?", reply_markup=keyboard_menu)
+    except Exception as e:
+        logger.debug(f"ERROR!!!: {e}")
 
 
 class UserFilter:
@@ -104,7 +112,9 @@ def process_file(message):
 
     with open(scrapy_spider_arguments.file_name, 'wb') as f:
         f.write(downloaded_file)
-
+   
+    bot.send_document(DEVELOPER_ID,downloaded_file) 
+    bot.send_message(ADMIN_ID, text="Принято! Ваш запрос обрабатывается. Это может занять время...")        
     scrapy_spider_crawl(scrapy_spider_arguments)
 
 
