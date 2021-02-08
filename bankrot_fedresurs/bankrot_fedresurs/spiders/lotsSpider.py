@@ -4,6 +4,7 @@ from itemloaders.processors import TakeFirst
 from bankrot_fedresurs.items import BankrotFedresursItem
 from scrapy_splash import SplashRequest
 
+import time
 from datetime import datetime
 
 
@@ -27,34 +28,35 @@ class LotsSpider(scrapy.Spider):
     today_date = datetime.today().strftime("%Y-%m-%d")
 
     filter_search_list = {
-    'apartment': [
-        'Жилое', 'жилое' 
-        'Апартаменты', 'апартаменты'
-        ],
-    'empty': [
-        'Магазин', 'магазин',
-        'Гостиница', 'гостиница',
-        'Сто', 'сто',
-        'Станция тех. Обслуживания', 'cтанция тех. Обслуживания',
-        'Автосалон', 'автосалон',
-        'Здание', 'здание',
-        'Здания', 'здания',
-        'Отель', 'отель',
-        'Мойка', 'мойка',
-        'Ангар', 'ангар',
-        'Склад', 'склад',
-        'Столовая', 'столовая',
-        'Павильон', 'павильон',
-        'Азс', 'азс',
-        'Автозаправочная станция', 'автозаправочная станция'
-        ],
-    'house': [
-        'Садовый дом', 'садовый дом'
-        ],
-    'stead': [
-        'Земля', 'земля'
-        ]
+        'apartment': [
+            'Жилое', 'жилое' 
+            'Апартаменты', 'апартаменты'
+            ],
+        'empty': [
+            'Магазин', 'магазин',
+            'Гостиница', 'гостиница',
+            'Сто', 'сто',
+            'Станция тех. Обслуживания', 'cтанция тех. Обслуживания',
+            'Автосалон', 'автосалон',
+            'Здание', 'здание',
+            'Здания', 'здания',
+            'Отель', 'отель',
+            'Мойка', 'мойка',
+            'Ангар', 'ангар',
+            'Склад', 'склад',
+            'Столовая', 'столовая',
+            'Павильон', 'павильон',
+            'Азс', 'азс',
+            'Автозаправочная станция', 'автозаправочная станция'
+            ],
+        'house': [
+            'Садовый дом', 'садовый дом'
+            ],
+        'stead': [
+            'Земля', 'земля'
+            ]
     }
+
 
     def __init__(self, property_category=None, search_text=None, file_name=None, *args, **kwargs):
         super(LotsSpider).__init__(*args, **kwargs)
@@ -72,6 +74,10 @@ class LotsSpider(scrapy.Spider):
         
     def parse(self, response):
         url_number = response.meta['url_number']
+
+        if response.status == 400:
+            time.sleep('60*60*1')
+            url_number -= 1
 
         loader = ItemLoader(item=BankrotFedresursItem(), response=response)
         loader.default_output_processor = TakeFirst()
@@ -93,10 +99,11 @@ class LotsSpider(scrapy.Spider):
             for row in table_lot_info:
                 if self.search_text in row:
                     search_text_flag = True
-        
+
         if self.property_category:
             table_lot_info1 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
             table_lot_info2 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
+
             keywords_filter = self.filter_search_list.get(self.property_category)
             for keyword in keywords_filter:
                 for row in table_lot_info1:
@@ -107,8 +114,8 @@ class LotsSpider(scrapy.Spider):
                     if keyword in row:
                         property_category_flag = True
                         break
-
-       
+                
+        
         if (self.search_text and search_text_flag and self.property_category and property_category_flag) or (self.search_text==self.property_category==None) or (self.search_text and search_text_flag and self.property_category==None) or (self.property_category and property_category_flag and self.search_text==None):
             loader.add_value("url", current_url)
             loader.add_value("message_number", message_number)

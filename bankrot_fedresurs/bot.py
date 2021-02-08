@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from loguru import logger
 import telebot
 from telebot import types
-from telebot.types import InputMediaPhoto
 
 
 # settings for logging
@@ -131,6 +130,5 @@ if __name__ == "__main__":
         bot.polling(none_stop=True, interval=1)
 
     
-
 while True:
     pass
