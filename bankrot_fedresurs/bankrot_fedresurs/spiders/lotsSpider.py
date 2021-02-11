@@ -8,6 +8,77 @@ import time
 from datetime import datetime
 
 
+filter_search_list = {
+    'apartment': [
+        'Жилое', 'жилое',  
+        'Жилой', 'жилой',
+        'Жилые', 'жилые',
+        'Жилого', 'жилого'
+        'Апартаменты', 'апартаменты'
+        ],
+    'empty': [
+        'Магазин', 'магазин',
+        'Гостиница', 'гостиница',
+        'Сто', 'сто',
+        'Станция', 'cтанция',
+        'Автосалон', 'автосалон',
+        'Отель', 'отель',
+        'Мойка', 'мойка',
+        'Ангар', 'ангар',
+        'Склад', 'склад',
+        'Столовая', 'столовая',
+        'Павильон', 'павильон',
+        'Азс', 'азс',
+        'Автозаправочная', 'автозаправочная',
+        'Нежилое', 'нежилое'
+        ],
+    'house': [
+        'Садовый', 'садовый'
+        ],
+    'stead': [
+        'Земля', 'земля', 
+        'Участок', 'участок', 
+        'Земельный', 'земельный',
+        'Земельного', 'земельного',
+        'Земельному', 'земельному',
+        'Земельным', 'земельным',
+        'Земельном', 'земельном',
+        ]
+}
+
+
+def define_classification(text_data1, text_data2):
+    global filter_search_list
+    classificated_messages = {
+        'apartment': False,
+        'empty': False,
+        'house': False,
+        'stead': False
+        }
+
+    all_false_flag = True
+
+    for kind in filter_search_list:
+        for keyword in filter_search_list[kind]:
+            for row in text_data1:
+                if keyword in row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split():
+                    classificated_messages[kind] = True
+                    print(keyword, " in ", row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split())
+            for row in text_data2:
+                if keyword in row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split():
+                    classificated_messages[kind] = True
+                    print(keyword, " in ", row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split())
+    
+    print("flags: ", classificated_messages)
+
+    for flag in classificated_messages:
+        if classificated_messages[flag] == True:
+            all_false_flag = False
+            return classificated_messages
+
+    return None
+
+
 class LotsSpider(scrapy.Spider):
     name = 'lotsSpider'
     allowed_domains = ['bankrot.fedresurs.ru']
@@ -27,45 +98,12 @@ class LotsSpider(scrapy.Spider):
         end'''
     today_date = datetime.today().strftime("%Y-%m-%d")
 
-    filter_search_list = {
-        'apartment': [
-            'Жилое', 'жилое' 
-            'Апартаменты', 'апартаменты'
-            ],
-        'empty': [
-            'Магазин', 'магазин',
-            'Гостиница', 'гостиница',
-            'Сто', 'сто',
-            'Станция тех. Обслуживания', 'cтанция тех. Обслуживания',
-            'Автосалон', 'автосалон',
-            'Здание', 'здание',
-            'Здания', 'здания',
-            'Отель', 'отель',
-            'Мойка', 'мойка',
-            'Ангар', 'ангар',
-            'Склад', 'склад',
-            'Столовая', 'столовая',
-            'Павильон', 'павильон',
-            'Азс', 'азс',
-            'Автозаправочная станция', 'автозаправочная станция'
-            ],
-        'house': [
-            'Садовый дом', 'садовый дом'
-            ],
-        'stead': [
-            'Земля', 'земля'
-            ]
-    }
 
-
-    def __init__(self, property_category=None, search_text=None, file_name=None, *args, **kwargs):
+    def __init__(self, file_name=None, *args, **kwargs):
         super(LotsSpider).__init__(*args, **kwargs)
-
-        self.property_category = property_category
-        self.search_text = search_text
         with open(file_name, 'r') as f:
             self.urls = f.read().strip().split('\n')
-    
+
 
     def start_requests(self):
         yield SplashRequest(url=self.urls[0], callback=self.parse, endpoint='execute',
@@ -76,11 +114,8 @@ class LotsSpider(scrapy.Spider):
         url_number = response.meta['url_number']
 
         if response.status == 400:
-            time.sleep('60*60*1')
+            time.sleep(60*60*1)
             url_number -= 1
-
-        loader = ItemLoader(item=BankrotFedresursItem(), response=response)
-        loader.default_output_processor = TakeFirst()
 
         current_url = response.url
         message_number = response.xpath("normalize-space(//table[@class='headInfo']/tbody/tr/td[2]/text())").get()
@@ -90,33 +125,28 @@ class LotsSpider(scrapy.Spider):
         deadline_for_accepting_applications = response.xpath("normalize-space(//table[@class='headInfo'][4]/tbody/tr[3]/td[2]/text())").get()
         trading_date = response.xpath("normalize-space(//table[@class='headInfo'][4]/tbody/tr[5]/td[2]/text())").get()
 
-        search_text_flag = False
-        property_category_flag = False
+        table_lot_info1 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
+        table_lot_info2 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
 
-        if self.search_text:
-            table_lot_info = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
-            print(table_lot_info)
-            for row in table_lot_info:
-                if self.search_text in row:
-                    search_text_flag = True
-
-        if self.property_category:
-            table_lot_info1 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
-            table_lot_info2 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
-
-            keywords_filter = self.filter_search_list.get(self.property_category)
-            for keyword in keywords_filter:
-                for row in table_lot_info1:
-                    if keyword in row:
-                        property_category_flag = True
-                        break
-                for row in table_lot_info2:
-                    if keyword in row:
-                        property_category_flag = True
-                        break
-                
-        
-        if (self.search_text and search_text_flag and self.property_category and property_category_flag) or (self.search_text==self.property_category==None) or (self.search_text and search_text_flag and self.property_category==None) or (self.property_category and property_category_flag and self.search_text==None):
+        classification_flags = define_classification(table_lot_info1, table_lot_info2)
+        if classification_flags:
+            for kind in classification_flags:
+                if classification_flags[kind]:
+                    loader = ItemLoader(item=BankrotFedresursItem(), response=response)
+                    loader.default_output_processor = TakeFirst()
+                    loader.add_value("url", current_url)
+                    loader.add_value("message_number", message_number)
+                    loader.add_value("publication_date", publication_date)
+                    loader.add_value("debtor", debtor)
+                    loader.add_value("auction_form", auction_form)
+                    loader.add_value("deadline_for_accepting_applications", deadline_for_accepting_applications)
+                    loader.add_value("trading_date", trading_date)
+                    loader.add_value("classification", kind)
+                    print("CLASS: ", kind)
+                    yield loader.load_item()
+        else:
+            loader = ItemLoader(item=BankrotFedresursItem(), response=response) 
+            loader.default_output_processor = TakeFirst()
             loader.add_value("url", current_url)
             loader.add_value("message_number", message_number)
             loader.add_value("publication_date", publication_date)
@@ -124,7 +154,7 @@ class LotsSpider(scrapy.Spider):
             loader.add_value("auction_form", auction_form)
             loader.add_value("deadline_for_accepting_applications", deadline_for_accepting_applications)
             loader.add_value("trading_date", trading_date)
-
+            loader.add_value("classification", "other")
             yield loader.load_item()
 
         if url_number < len(self.urls):
