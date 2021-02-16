@@ -144,18 +144,18 @@ class LotsSpider(scrapy.Spider):
                     loader.add_value("classification", kind)
                     print("CLASS: ", kind)
                     yield loader.load_item()
-        else:
-            loader = ItemLoader(item=BankrotFedresursItem(), response=response) 
-            loader.default_output_processor = TakeFirst()
-            loader.add_value("url", current_url)
-            loader.add_value("message_number", message_number)
-            loader.add_value("publication_date", publication_date)
-            loader.add_value("debtor", debtor)
-            loader.add_value("auction_form", auction_form)
-            loader.add_value("deadline_for_accepting_applications", deadline_for_accepting_applications)
-            loader.add_value("trading_date", trading_date)
-            loader.add_value("classification", "other")
-            yield loader.load_item()
+        
+        loader = ItemLoader(item=BankrotFedresursItem(), response=response) 
+        loader.default_output_processor = TakeFirst()
+        loader.add_value("url", current_url)
+        loader.add_value("message_number", message_number)
+        loader.add_value("publication_date", publication_date)
+        loader.add_value("debtor", debtor)
+        loader.add_value("auction_form", auction_form)
+        loader.add_value("deadline_for_accepting_applications", deadline_for_accepting_applications)
+        loader.add_value("trading_date", trading_date)
+        loader.add_value("classification", "other")
+        yield loader.load_item()
 
         if url_number < len(self.urls):
             yield SplashRequest(url=self.urls[url_number], callback=self.parse, endpoint='execute',
