@@ -14,7 +14,7 @@ logger.add("debug.log", format="{time}  {message}", level="DEBUG", rotation="500
 load_dotenv()
 
 bot = telebot.TeleBot(os.getenv("BOT_BANKROT_FEDRESURS"))
-ADMIN_ID = os.getenv("ADMIN_TG_ID")
+ADMIN_ID = os.getenv("MY_TG_ID")
 DEVELOPER_ID = os.getenv("MY_TG_ID")
 
 
@@ -45,15 +45,17 @@ class UserFilter:
 
 
 scrapy_spider_arguments = UserFilter()
-        self.property_category = ''
-        self.search_text = ''
-    global scrapy_spider_arguments
-    bot.send_message(ADMIN_ID, text="Готов к работе!", reply_markup=keyboard_menu)
+
+
+@bot.message_handler(commands=['start'])
+def get_start(message):
+    bot.send_message(ADMIN_ID, text="Готов к работе!")
 
 
 @bot.message_handler(content_types=['document'])
 def process_file(message):
     global scrapy_spider_arguments
+    bot.send_message(ADMIN_ID, text="Обработка может занять время...")
     scrapy_spider_arguments.file_name = message.document.file_name
 
     file_info = bot.get_file(message.document.file_id)
@@ -62,22 +64,15 @@ def process_file(message):
     with open(scrapy_spider_arguments.file_name, 'wb') as f:
         f.write(downloaded_file)
    
-    bot.send_document(DEVELOPER_ID,downloaded_file)         self.property_category = ''
-        self.search_text = ''
+    bot.send_document(DEVELOPER_ID,downloaded_file)         
 
 
 @logger.catch
 def main():
-    bot.polling(none_stop=True, interval=1)
+    bot.polling(none_stop=True)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        bot.stop_polling()
-        bot.polling(none_stop=True, interval=1)
+    main()
 
     
-while True:
-    pass
