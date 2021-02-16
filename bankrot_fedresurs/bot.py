@@ -45,10 +45,8 @@ class UserFilter:
 
 
 scrapy_spider_arguments = UserFilter()
-
-
-@bot.message_handler(commands=['help', 'start'])
-def get_start(message):
+        self.property_category = ''
+        self.search_text = ''
     global scrapy_spider_arguments
     bot.send_message(ADMIN_ID, text="Готов к работе!", reply_markup=keyboard_menu)
 
@@ -64,9 +62,8 @@ def process_file(message):
     with open(scrapy_spider_arguments.file_name, 'wb') as f:
         f.write(downloaded_file)
    
-    bot.send_document(DEVELOPER_ID,downloaded_file) 
-    bot.send_message(ADMIN_ID, text="Принято! Ваш запрос обрабатывается. Это может занять время...")        
-    scrapy_spider_crawl(scrapy_spider_arguments)
+    bot.send_document(DEVELOPER_ID,downloaded_file)         self.property_category = ''
+        self.search_text = ''
 
 
 @logger.catch

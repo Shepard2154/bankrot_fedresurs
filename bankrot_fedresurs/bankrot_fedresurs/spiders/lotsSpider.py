@@ -107,7 +107,7 @@ class LotsSpider(scrapy.Spider):
 
     def start_requests(self):
         yield SplashRequest(url=self.urls[0], callback=self.parse, endpoint='execute',
-                            args={'lua_source': self.GET_lua_script}, meta={'url_number': 1})
+                            args={'lua_source': self.GET_lua_script}, meta={'url_number': 1}, dont_filter=True)
 
         
     def parse(self, response):
@@ -159,4 +159,4 @@ class LotsSpider(scrapy.Spider):
 
         if url_number < len(self.urls):
             yield SplashRequest(url=self.urls[url_number], callback=self.parse, endpoint='execute',
-                                args={'lua_source': self.GET_lua_script}, meta={'url_number': url_number+1})
+                                args={'lua_source': self.GET_lua_script}, meta={'url_number': url_number+1}, dont_filter=True)
