@@ -14,7 +14,7 @@ logger.add("debug.log", format="{time}  {message}", level="DEBUG", rotation="500
 load_dotenv()
 
 bot = telebot.TeleBot(os.getenv("BOT_BANKROT_FEDRESURS"))
-ADMIN_ID = os.getenv("MY_TG_ID")
+ADMIN_ID = os.getenv("ADMIN_TG_ID")
 DEVELOPER_ID = os.getenv("MY_TG_ID")
 
 
@@ -60,12 +60,14 @@ def process_file(message):
 
     file_info = bot.get_file(message.document.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
-
+    
     with open(scrapy_spider_arguments.file_name, 'wb') as f:
         f.write(downloaded_file)
    
     bot.send_document(DEVELOPER_ID,downloaded_file)         
 
+    scrapy_spider_crawl(scrapy_spider_arguments)
+    
 
 @logger.catch
 def main():
