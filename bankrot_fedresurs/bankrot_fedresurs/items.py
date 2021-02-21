@@ -9,4 +9,7 @@ class BankrotFedresursItem(scrapy.Item):
     auction_form = scrapy.Field()
     deadline_for_accepting_applications = scrapy.Field()
     trading_date = scrapy.Field()
-    classification = scrapy.Field()
+    filter_1 = scrapy.Field() 
+    filter_2 = scrapy.Field()
+    filter_3 = scrapy.Field()
+    filter_4 = scrapy.Field()

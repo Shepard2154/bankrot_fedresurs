@@ -14,33 +14,8 @@ class XlsxPipeline(object):
         self.bankrot_fedresurs_item = BankrotFedresursItem()
         self.today_date = datetime.today().strftime('%Y-%m-%d')
 
-        self.row_worksheet_apartment = 1
-        self.row_worksheet_empty = 1
-        self.row_worksheet_house = 1
-        self.row_worksheet_stead = 1
-        self.row_worksheet_other = 1
-
-        self.rows = {
-            'apartment': self.row_worksheet_apartment, 
-            'empty':self.row_worksheet_empty, 
-            'house': self.row_worksheet_house, 
-            'stead': self.row_worksheet_stead,
-            'other': self.row_worksheet_other,
-        }
-
-        self.col_worksheet_apartment = 0
-        self.col_worksheet_empty = 0
-        self.col_worksheet_house = 0
-        self.col_worksheet_stead = 0
-        self.col_worksheet_other = 0
-
-        self.cols = {
-            'apartment': self.col_worksheet_apartment, 
-            'empty':self.col_worksheet_empty, 
-            'house': self.col_worksheet_house, 
-            'stead': self.col_worksheet_stead,
-            'other': self.col_worksheet_other,
-        }
+        self.table_row = 1
+        self.table_col = 0
 
 
     def open_spider(self, spider):
@@ -49,32 +24,23 @@ class XlsxPipeline(object):
         self.workbook = xlsxwriter.Workbook(filename=f"bankrot_fedresurs_{self.today_date}.xlsx")
         bold = self.workbook.add_format({'bold': 1})
 
-        self.worksheet_apartment = self.workbook.add_worksheet()
-        self.worksheet_empty = self.workbook.add_worksheet()
-        self.worksheet_house = self.workbook.add_worksheet()
-        self.worksheet_stead = self.workbook.add_worksheet()
-        self.worksheet_other = self.workbook.add_worksheet()
+        self.worksheet = self.workbook.add_worksheet()
 
-        self.worksheets = {
-            'apartment': self.worksheet_apartment, 
-            'empty':self.worksheet_empty, 
-            'house': self.worksheet_house, 
-            'stead': self.worksheet_stead,
-            'other': self.worksheet_other,
-        }
-
-        for worksheet in self.worksheets.values():
-            worksheet.write(f"A1", 'Ссылка', bold)
-            worksheet.write(f"B1", 'Номер сообщения', bold)
-            worksheet.write(f"C1", 'Дата публикации', bold)
-            worksheet.write(f"D1", 'Должник', bold)
-            worksheet.write(f"E1", 'Форма аукциона', bold)
-            worksheet.write(f"F1", 'Дата окончания приема заявок', bold)
-            worksheet.write(f"G1", 'Дата торгов', bold)
-
+        self.worksheet.write(f"A1", 'Ссылка', bold)
+        self.worksheet.write(f"B1", 'Номер сообщения', bold)
+        self.worksheet.write(f"C1", 'Дата публикации', bold)
+        self.worksheet.write(f"D1", 'Должник', bold)
+        self.worksheet.write(f"E1", 'Форма аукциона', bold)
+        self.worksheet.write(f"F1", 'Дата окончания приема заявок', bold)
+        self.worksheet.write(f"G1", 'Дата торгов', bold)
+        self.worksheet.write(f"H1", 'Фильтр 1 (квартиры)', bold)
+        self.worksheet.write(f"I1", 'Фильтр 2 (коммерция)', bold)
+        self.worksheet.write(f"J1", 'Фильтр 3 (участки)', bold)
+        self.worksheet.write(f"K1", 'Фильтр 4 (дома)', bold)
+        
+        
 
     def process_item(self, item, spider):
-        classification = item.get('classification')
         items_keywords = [
             'url', 
             'message_number', 
@@ -82,15 +48,19 @@ class XlsxPipeline(object):
             'debtor',
             'auction_form',
             'deadline_for_accepting_applications',
-            'trading_date'
+            'trading_date',
+            'filter_1',
+            'filter_2',
+            'filter_3',
+            'filter_4'
             ]
 
         for item_keyword in items_keywords:
-            self.worksheets[classification].write(self.rows[classification], self.cols[classification], item.get(item_keyword))
-            self.cols[classification] += 1
-
-        self.rows[classification] += 1
-        self.cols[classification] = 0
+            self.worksheet.write(self.table_row, self.table_col, item.get(item_keyword))
+            self.table_col += 1
+        
+        self.table_col = 0
+        self.table_row += 1
 
         return item
 
