@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from loguru import logger
 import telebot
 from telebot import types
+import time
 
 
 # settings for logging
@@ -29,6 +30,7 @@ def scrapy_spider_crawl(scrapy_spider_arguments):
     try:
         bash_command = subprocess.check_output(bash_command_to_parse, shell=True)
 
+        time.sleep(1)
         excel_table = open(f'bankrot_fedresurs_{today}.xlsx', 'rb')
         excel_table2 = open(f'bankrot_fedresurs_{today}.xlsx', 'rb') 
         bot.send_document(ADMIN_ID, excel_table)

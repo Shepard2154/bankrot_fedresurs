@@ -30,7 +30,8 @@ filter_search_list = {
         'Павильон', 'павильон',
         'Азс', 'азс',
         'Автозаправочная', 'автозаправочная',
-        'Нежилое', 'нежилое'
+        'Нежилое', 'нежилое',
+        'Нежилые', 'нежилые'
         ],
     'house': [
         'Садовый', 'садовый'
@@ -64,10 +65,12 @@ def define_classification(text_data1, text_data2):
                 if keyword in row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split():
                     classificated_messages[kind] = True
                     print(keyword, " in ", row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split())
+
             for row in text_data2:
                 if keyword in row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split():
                     classificated_messages[kind] = True
                     print(keyword, " in ", row.strip().replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace(':', '').replace(';', '').split())
+
     
     print("flags: ", classificated_messages)
 
@@ -127,6 +130,8 @@ class LotsSpider(scrapy.Spider):
 
         table_lot_info1 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[last()]/text()").getall()
         table_lot_info2 = response.xpath("//table[@class='lotInfo']/tbody/tr/td[2]/text()").getall()
+        
+        print(table_lot_info1, '\n\n', table_lot_info2)
 
         classification_flags = define_classification(table_lot_info1, table_lot_info2)
         if classification_flags:
